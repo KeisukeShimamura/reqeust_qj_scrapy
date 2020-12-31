@@ -7,12 +7,12 @@ class RequestQjSpider(scrapy.Spider):
   name = 'request_qj_spider'
   allowed_domains = ['www.qjnavi.jp']
   start_urls = [
-    'https://www.qjnavi.jp/tokyo',
-    'https://www.qjnavi.jp/kanagawa',
-    'https://www.qjnavi.jp/chiba',
-    'https://www.qjnavi.jp/saitama',
-    'https://www.qjnavi.jp/osaka',
-    'https://www.qjnavi.jp/hokkaido',
+    'https://www.qjnavi.jp/search?pref=tokyo&technical_rank=biyoshi,biyoshi-assistant,biyoshi-colorist,reception,hairmake',
+    'https://www.qjnavi.jp/search?pref=kanagawa&technical_rank=biyoshi,biyoshi-assistant,biyoshi-colorist,reception,hairmake',
+    'https://www.qjnavi.jp/search?pref=chiba&technical_rank=biyoshi,biyoshi-assistant,biyoshi-colorist,reception,hairmake',
+    'https://www.qjnavi.jp/search?pref=saitama&technical_rank=biyoshi,biyoshi-assistant,biyoshi-colorist,reception,hairmake',
+    'https://www.qjnavi.jp/search?pref=osaka&technical_rank=biyoshi,biyoshi-assistant,biyoshi-colorist,reception,hairmake',
+    'https://www.qjnavi.jp/search?pref=hokkaido&technical_rank=biyoshi,biyoshi-assistant,biyoshi-colorist,reception,hairmake',
   ]
 
   def parse(self, response):
@@ -39,13 +39,24 @@ class RequestQjSpider(scrapy.Spider):
         item['employment'] = content.get_text().strip()
       elif title.get_text() == '募集職種・技術ランク':
         item['job_category'] = content.get_text().strip()
-      elif title.get_text() == '勤務地':
-        item['access'] = content.get_text().strip()
-      elif title.get_text() == '必須免許・資格':
-        item['qualification'] = content.find('ul').get_text().strip()
+      elif title.get_text() == '勤務先':
+        temp = content.get_text().strip().split()
+        access = ''
+        for t in temp:
+          if '駅' in t:
+            if access != '':
+              access += '|'
+            access += t
+          else:
+            access += ' ' + t
+        item['access'] = access
+      elif title.get_text() == '必要免許・資格':
+        temp = content.find('ul').get_text().strip().split()
+        item['qualification'] = '|'.join(temp)
         item['entry_requirement'] = content.find('p').get_text().strip()
       elif title.get_text() == 'こだわり':
-        item['commitment_term'] = content.find('ul').get_text().strip()
+        temp = content.find('ul').get_text().strip().split()
+        item['commitment_term'] = '|'.join(temp)
       elif title.get_text() == '給与':
         item['salary'] = content.find('p').get_text().strip()
         salary_items = content.find_all('span', class_='tag-gray')
@@ -64,9 +75,13 @@ class RequestQjSpider(scrapy.Spider):
           elif itm.get_text() == '時給':
             item['t_salary_lower'] = itm.next_element.findNext('span').get_text().strip()
             item['t_salary_upper'] = itm.next_element.findNext('span').findNext('span').get_text().strip()
-          elif itm.get_text() == '歩合':
+            if item['t_salary_upper'].isnumeric():
+              item['t_salary_upper'] = ''
+          elif itm.get_text() == '完全歩合':
             item['commission_lower'] = itm.next_element.findNext('span').get_text().strip()
             item['commission_upper'] = itm.next_element.findNext('span').findNext('span').get_text().strip()
+            if item['commission_upper'].isnumeric():
+              item['commission_upper'] = ''
       elif title.get_text() == '勤務時間':
         item['work_time'] = content.get_text().strip()
       elif title.get_text() == '休日':
@@ -94,19 +109,19 @@ class RequestQjSpider(scrapy.Spider):
       elif title.get_text() == '店舗情報':
         dt_list = tr.find_all('dt')
         for dt in dt_list:
-          if dt.get_text == '坪数':
+          if dt.get_text() == '坪数':
             item['floor_space'] = dt.next_element.findNext('dd').get_text().replace(' 坪', '')
-          elif dt.get_text == 'セット面':
+          elif dt.get_text() == 'セット面':
             item['seat_num'] = dt.next_element.findNext('dd').get_text().replace(' 面', '')
-          elif dt.get_text == 'シャンプー台':
+          elif dt.get_text() == 'シャンプー台':
             item['shampoo_stand'] = dt.next_element.findNext('dd').get_text().strip()
-          elif dt.get_text == 'スタッフ':
+          elif dt.get_text() == 'スタッフ':
             item['staff'] = dt.next_element.findNext('dd').get_text().replace(' 名', '')
-          elif dt.get_text == '新規客割合':
+          elif dt.get_text() == '新規客割合':
             item['new_customer_ratio'] = dt.next_element.findNext('dd').get_text().replace(' %', '')
-          elif dt.get_text == '標準カット単価':
+          elif dt.get_text() == '標準カット単価':
             item['cut_unit_price'] = dt.next_element.findNext('dd').get_text().replace(' 円', '')
-          elif dt.get_text == '顧客単価':
+          elif dt.get_text() == '顧客単価':
             item['customer_unit_price'] = dt.next_element.findNext('dd').get_text().replace(' 円', '')
       elif title.get_text() == '所在地':
         temp = content.get_text().split()
