@@ -87,7 +87,7 @@ DOWNLOAD_DELAY = 3
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-
+"""
 FEED_EXPORT_FIELDS = [
     "url",
     "catch_copy",
@@ -122,4 +122,12 @@ FEED_EXPORT_FIELDS = [
     "customer_unit_price",
     "postcode",
     "address",
+]
+"""
+
+FEED_EXPORT_FIELDS = [
+    "サロン名",
+    "住所",
+    "電話番号",
+    "最寄駅",
 ]

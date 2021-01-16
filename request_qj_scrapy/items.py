@@ -42,3 +42,9 @@ class RequestQjScrapyItem(scrapy.Item):
     postcode = scrapy.Field()
     address = scrapy.Field()
 
+class RequestQjSalonScrapyItem(scrapy.Item):
+    # define the fields for your item here like:
+    サロン名 = scrapy.Field()
+    住所 = scrapy.Field()
+    電話番号 = scrapy.Field()
+    最寄駅 = scrapy.Field()
